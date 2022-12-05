@@ -54,17 +54,11 @@ Include=/etc/zabbix/zabbix_agentd.d/
 ```
 
 ```
-* # Configure HAProxy control socket
-*   Configure HAProxy to listen on `/var/lib/haproxy/stats` by adding/configuring in HAProxy configuration file (/etc/haproxy/haproxy.cfg):
-* # haproxy.conf snippet
-* # haproxy read-only non-admin socket
-* ## (user level permissions are required, admin level will work as well, though not necessary)
+* Configure HAProxy control socket
+* Configure HAProxy to listen on `/var/lib/haproxy/stats` by adding/configuring in HAProxy configuration file (/etc/haproxy/haproxy.cfg):
 * global
-*   # default usage, through socket
+*    default usage, through socket
 *   stats socket /var/lib/haproxy/stats  mode 666 level admin
-*   ## alternative usage, using tcp connection (useful e.g. when haproxy runs inside a docker and zabbix-agent in another)
-*   ## replace socket path by ip:port combination on both scripts when using this approach, e.g. 172.17.0.1:9000
-*   #stats socket *:9000 
 * Reload HAProxy conf restarting the HAProxy or reload: service haproxy restart
 * Test if HAProxy user can read from socket
 * 1.	Install socat and nc utilities: yum install nc socat –yum
@@ -121,23 +115,23 @@ $ setenforce 0
 
 #### Discover
 ```
-/usr/local/bin/haproxy_discovery.sh $1 $2
+/etc/zabbix/scripts/haproxy_discovery.sh $1 $2
 $1 is a path to haproxy socket
 $2 is FRONTEND or BACKEND or SERVERS
 
-# /usr/local/bin/haproxy_discovery.sh /var/run/haproxy/info.sock FRONTEND    # second argument is optional
-# /usr/local/bin/haproxy_discovery.sh /var/run/haproxy/info.sock BACKEND     # second argument is optional
-# /usr/local/bin/haproxy_discovery.sh /var/run/haproxy/info.sock SERVERS     # second argument is optional
+# /etc/zabbix/scripts/haproxy_discovery.sh /var/lib/haproxy/stats FRONTEND    # second argument is optional
+# /etc/zabbix/scripts/haproxy_discovery.sh /var/lib/haproxy/stats BACKEND     # second argument is optional
+# /etc/zabbix/scripts/haproxy_discovery.sh /var/lib/haproxy/stats SERVERS     # second argument is optional
 ```
 
 #### haproxy_stats.sh script
 ```
 ## Usage: haproxy_stats.sh $1 $2 $3 $4
-### $1 is a path to haproxy socket - optional, defaults to /var/run/haproxy/info.sock
+### $1 is a path to haproxy socket - optional, defaults to /var/lib/haproxy/stats
 ### $2 is a name of the backend, as set in haproxy.cfg
 ### $3 is a name of the server, as set in haproxy.cfg
 ### $4 is a stat as references by HAProxy terminology
-# haproxy_stats.sh /var/run/haproxy/info.sock www-backend www01 status
+# haproxy_stats.sh /var/lib/haproxy/stats www-backend www01 status
 # haproxy_stats.sh www-backend BACKEND status
 # haproxy_stats.sh https-frontend FRONTEND status
 ```
@@ -151,15 +145,15 @@ $2 is FRONTEND or BACKEND or SERVERS
 ### $1 is a path to haproxy socket
 ### $2 is a name of the backend, as set in haproxy.cfg
 ### $3 is a name of the server, as set in haproxy.cfg
-# echo "show stat" | socat /var/run/haproxy/info.sock stdio | grep "^www-backend,www01" | cut -d, -f9
-# echo "show stat" | socat /var/run/haproxy/info.sock stdio | grep "^www-backend,BACKEND" | cut -d, -f10
-# echo "show stat" | socat /var/run/haproxy/info.sock stdio | grep "^https-frontend,FRONTEND" | cut -d, -f5
-# echo "show stat" | socat /var/run/haproxy/info.sock stdio | grep "^api-backend,api02" | cut -d, -f18 | cut -d\  -f1
+# echo "show stat" | socat /var/lib/haproxy/stats stdio | grep "^www-backend,www01" | cut -d, -f9
+# echo "show stat" | socat /var/lib/haproxy/stats stdio | grep "^www-backend,BACKEND" | cut -d, -f10
+# echo "show stat" | socat /var/lib/haproxy/stats stdio | grep "^https-frontend,FRONTEND" | cut -d, -f5
+# echo "show stat" | socat /var/lib/haproxy/stats stdio | grep "^api-backend,api02" | cut -d, -f18 | cut -d\  -f1
 ```
 
 #### More
 Take a look at the out put of the following to learn more about what is available though HAProxy socket
 ```
-echo "show stat" | socat /var/run/haproxy/info.sock stdio
+echo "show stat" | socat /var/lib/haproxy/stats stdio
 ```
 
